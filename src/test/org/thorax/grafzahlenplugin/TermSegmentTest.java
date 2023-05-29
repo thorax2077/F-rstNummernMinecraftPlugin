@@ -49,5 +49,19 @@ public class TermSegmentTest {
 
         Assertions.assertEquals(seg3_1.calcTermSeg(seg3_2).getValue(), 1d, "3 / 3 ist nicht 1");
         Assertions.assertEquals(termSegment3.calcSubSeg(), 1d, "termSeg3 calcSubSeg ist nicht 1");
+
+        //Build sub Seg 4
+        TermSegment seg4_1 = new TermSegment(TermOperator.MULT, 3);
+        TermSegment seg4_2 = new TermSegment(TermOperator.NONE,
+                new TermSegment[]{
+                        new TermSegment(TermOperator.ADD, 3),
+                        new TermSegment(TermOperator.NONE, 3)
+                });
+        TermSegment[] termSeg4 = {seg4_1, seg4_2};
+        TermSegment TermSegment4 = new TermSegment(TermOperator.NONE, termSeg4);
+
+        Assertions.assertEquals(6, seg4_2.calcSubSeg(), "3 + 3 ist nicht 6");
+        Assertions.assertEquals(18, seg4_1.calcTermSeg(seg4_2).getValue(), "3 + 6 sind nicht 18");
+        Assertions.assertEquals(18, TermSegment4.calcSubSeg(), "3 * (3 + 3) ist nicht 18");
     }
 }

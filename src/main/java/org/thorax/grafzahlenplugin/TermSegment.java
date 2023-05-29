@@ -10,7 +10,7 @@ public class TermSegment {
 
     private TermSegment[] subSegment;
     private double value;
-    private TermOperator operator;
+    private final TermOperator operator;
 
     public TermSegment(TermOperator termOp, double val) {
         this.operator = termOp;
@@ -19,6 +19,7 @@ public class TermSegment {
     public TermSegment(TermOperator termOp, TermSegment[] subSeg) {
         this.operator = termOp;
         this.subSegment = subSeg;
+        this.value = this.calcSubSeg();
     }
 
     public double getValue() {
@@ -81,17 +82,32 @@ public class TermSegment {
     }
 
     public String toString() {
-        String toReturn = Double.toString(value);
+        String toReturn = "";
+        if(this.subSegment != null){
+            toReturn += "(";
+            for (TermSegment seg :
+                    this.subSegment) {
+                toReturn += seg.toString();
+            }
+        } else {
+            toReturn = Double.toString(value);
+        }
+
         switch (operator) {
             case ADD:
                 toReturn += "+";
                 break;
             case SUB:
                 toReturn += "-";
+                break;
             case MULT:
                 toReturn += "*";
+                break;
             case DIV:
                 toReturn += "/";
+                break;
+            case NONE:
+                break;
         }
         return toReturn;
     }
