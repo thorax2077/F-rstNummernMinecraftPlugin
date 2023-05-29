@@ -1,0 +1,9 @@
+name: GrafZahlenPlugin
+version: '${project.version}'
+main: org.thorax.grafzahlenplugin.GrafZahlenPlugin
+description: plugin
+api-version: 1.19
+commands:
+  gzp:
+    description: schnittstelle zum GrafZahlenPlugin
+    usage: /gzp help {für mehr infos}
