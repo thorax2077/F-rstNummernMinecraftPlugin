@@ -1,29 +1,52 @@
-package org.thorax.grafzahlenplugin;
+package org.thorax.grafzahlenplugin.Term;
 
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 public class TermSegment {
 
     private TermSegment[] subSegment;
+
     private double value;
+
     private final TermOperator operator;
 
-    public TermSegment(TermOperator termOp, double val) {
+    public TermSegment(@NotNull TermOperator termOp, double val) {
         this.operator = termOp;
         this.value = val;
+
     }
-    public TermSegment(TermOperator termOp, TermSegment[] subSeg) {
+    public TermSegment(@NotNull TermOperator termOp, @NotNull TermSegment[] subSeg) {
         this.operator = termOp;
-        this.subSegment = subSeg;
+        this.setSubSegment(subSeg);
         this.value = this.calcSubSeg();
+    }
+
+    public TermOperator getOperator() {
+        return operator;
+    }
+
+    private void setSubSegment(TermSegment[] subSegment) {
+        if (subSegment[subSegment.length - 1].operator != TermOperator.NONE) {
+            double value = subSegment[subSegment.length - 1].getValue();
+            subSegment[subSegment.length - 1] = new TermSegment(TermOperator.NONE, value);
+        }
+        this.subSegment = subSegment;
+    }
+
+    public TermSegment[] getSubSegment() {
+        return subSegment;
     }
 
     public double getValue() {
         return value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
     }
 
     public TermSegment calcTermSeg(TermSegment termSeg) {
@@ -46,8 +69,7 @@ public class TermSegment {
         for (TermSegment subSeg :
                 subSegCopy) {
             if (subSeg.subSegment != null) {
-                double calculatedValue = subSeg.calcSubSeg();
-                subSeg.value = calculatedValue;
+                subSeg.value = subSeg.calcSubSeg();
             }
         }
         for (int i = 0; i < subSegCopy.length; i++) {
@@ -79,6 +101,23 @@ public class TermSegment {
             }
         }
         return subSegCopy[0].getValue();
+    }
+
+    public int getDepth() {
+        return getDepth(this);
+    }
+
+    public static int getDepth(TermSegment termSegment) {
+        int toReturn = 0;
+        int depth = 0;
+        if (termSegment != null) {
+            toReturn = 1;
+            for (int i = 0; i < termSegment.subSegment.length -1; i++) {
+                depth = Math.max(termSegment.subSegment[i].getDepth(), termSegment.subSegment[i + 1].getDepth());
+            }
+            toReturn += depth;
+        }
+        return toReturn;
     }
 
     public String toString() {

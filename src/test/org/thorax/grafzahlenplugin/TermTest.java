@@ -2,8 +2,10 @@ package org.thorax.grafzahlenplugin;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.thorax.grafzahlenplugin.Term.TermOperator;
+import org.thorax.grafzahlenplugin.Term.TermSegment;
 
-public class TermSegmentTest {
+public class TermTest {
 
     @Test
     public void testCalcSubSeg() {
@@ -64,4 +66,6 @@ public class TermSegmentTest {
         Assertions.assertEquals(18, seg4_1.calcTermSeg(seg4_2).getValue(), "3 + 6 sind nicht 18");
         Assertions.assertEquals(18, TermSegment4.calcSubSeg(), "3 * (3 + 3) ist nicht 18");
     }
+
+
 }
