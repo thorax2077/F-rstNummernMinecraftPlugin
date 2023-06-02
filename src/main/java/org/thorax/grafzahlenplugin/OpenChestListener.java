@@ -23,7 +23,7 @@ public class OpenChestListener implements Listener {
             if (!ev.getAction().isRightClick()) {
                 return;
             }
-            GrafZahlenPlugin.LOGGER.log(Level.INFO, "[GrapfZahlen] ineraction event | right click");
+            GrafZahlenPlugin.LOGGER.log(Level.INFO, "[GrafZahl] ineraction event | right click");
             Block block = ev.getClickedBlock();
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block Instance " + block.getType());
             switch (block.getType()) {
@@ -33,14 +33,14 @@ public class OpenChestListener implements Listener {
                     Chest chest = (Chest) block.getState();
                     if (GrafZahlenPlugin.CHEST_SET.contains(chest)) {
                         ev.setCancelled(true);
-                        GrafZahlenPlugin.LOGGER.log(Level.INFO, "[GrapfZahlen] interacted with a chest block");
+                        GrafZahlenPlugin.LOGGER.log(Level.INFO, "[GrafZahl] interacted with a chest block");
                         Player player = ev.getPlayer();
                         player.sendMessage(Component.text("eins hahaha. zwei hahaha"));
                     }
                 default:
             }
         } catch (Exception ex) {
-            GrafZahlenPlugin.LOGGER.log(Level.SEVERE, "[GrafZahlen] onRightClickChestBlock exception aufgetreten");
+            GrafZahlenPlugin.LOGGER.log(Level.SEVERE, "[GrafZahl] onRightClickChestBlock exception aufgetreten");
             GrafZahlenPlugin.LOGGER.log(Level.SEVERE, ex.getMessage());
         }
 
