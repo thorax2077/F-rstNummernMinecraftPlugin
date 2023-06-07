@@ -10,9 +10,11 @@ public class TermGenerator implements Cloneable{
 
     private int termCount = 2;
 
-    private double minValue = 5d;
+    private double minValue = -5d;
 
     private double maxValue = 5d;
+
+    private boolean useTermSegments = true;
 
     private TermSegment[] termSegmentsToUse = new TermSegment[0];
 
@@ -26,20 +28,21 @@ public class TermGenerator implements Cloneable{
             return (TermGenerator) this.clone();
         } catch (CloneNotSupportedException notSupportedException) {
             notSupportedException.printStackTrace();
+            return null;
         }
     }
 
-    public TermGenerator setMaxDepth(int depth) {
+    public TermGenerator maxDepth(int depth) {
         this.maxDepth = depth;
         return this;
     }
 
-    public TermGenerator setTermCount(int count) {
+    public TermGenerator termCount(int count) {
         this.termCount = count;
         return this;
     }
 
-    public TermGenerator setValueRange(double min, double max) {
+    public TermGenerator valueRange(double min, double max) {
         this.minValue = min;
         this.maxValue = max;
         return this;
@@ -51,17 +54,24 @@ public class TermGenerator implements Cloneable{
         return this;
     }
 
+    public TermGenerator useSuppliedTermSegments(boolean use) {
+        this.useTermSegments = use;
+        return this;
+    }
+
     public TermSegment build() {
         TermSegment toReturn = null;
         Random rand = new Random();
         TermSegment[] topLevel = new TermSegment[this.termCount];
         double difference = Math.abs(this.minValue) + Math.abs(this.maxValue);
         double termValue;
-        for (int i = 1; i < this.termCount; i++) {
-            if (rand.nextBoolean() && this.maxDepth > 1) {
-                topLevel[i] = this.makeCopy().setMaxDepth(this.maxDepth - 1).build();
+        for (int i = 0; i < this.termCount; i++) {
+            if (this.useTermSegments && this.termSegmentsToUse.length > i && this.termSegmentsToUse[i] != null) {
+                topLevel[i] = this.termSegmentsToUse[i];
+            } else if (this.maxDepth > 1 && this.randomOrTrueIfNoSubsegmentsPresent(topLevel, rand, i, this.termCount)) {
+                topLevel[i] = this.makeCopy().maxDepth(this.maxDepth - 1).useSuppliedTermSegments(false).build();
             } else {
-                termValue = this.minValue + rand.nextDouble() % difference;
+                termValue = this.minValue + rand.nextDouble() * difference;
                 topLevel[i] = new TermSegment(TermOperator.getTermOperatorByIndex(rand.nextInt(4)), termValue);
             }
         }
@@ -69,4 +79,20 @@ public class TermGenerator implements Cloneable{
         return toReturn;
     }
 
+    private boolean randomOrTrueIfNoSubsegmentsPresent(TermSegment[] termArr, Random random, int i, int length) {
+        boolean subSegmentNotPresent = true;
+        for (TermSegment term :
+                termArr) {
+            if (term == null) continue;
+            if (term.getSubSegment() != null) {
+                subSegmentNotPresent = false;
+                break;
+            }
+        }
+        if (subSegmentNotPresent && i == length - 1) {
+            return true;
+        } else {
+            return random.nextBoolean();
+        }
+    }
 }

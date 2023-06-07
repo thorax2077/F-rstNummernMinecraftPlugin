@@ -1,11 +1,8 @@
 package org.thorax.grafzahlenplugin;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -16,12 +13,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.thorax.grafzahlenplugin.Term.TermSegment;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
+import java.util.*;
 import java.util.logging.Level;
 
 public class GrafZahlenCommand implements CommandExecutor {
+
+
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
         try {
@@ -31,56 +30,10 @@ public class GrafZahlenCommand implements CommandExecutor {
             }
             switch (strings[0]) {
                 case "help":
-                    Component comp;
                     if (strings.length == 1) {
-                        comp = Component.text()
-                                .content("Nutzung: gzp help <anderer command>\n" +
-                                        "andere commands:\n" +
-                                        "add\n" +
-                                        "remove\n" +
-                                        "list\n").build();
-                        commandSender.sendMessage(comp);
-                        return true;
-                    } else if (strings.length > 1) {
-                        switch (strings[1]) {
-                            case "add":
-                                comp = Component.text()
-                                        .content("Beschreibung: wird genutzt um eine neue Truhe für das GZ-Plugin zu registrieren\n" +
-                                                "Nutzung: gzp add [<worldId>] [<x> <z> <y>]\n" +
-                                                "Parameterbeschreibung: worldId beschreibt die Dimension inder sich die zu registrierende Truhe befindet" +
-                                                "das Argument kann den Wert 0 (OverWorld), 1 (Nether) oder 2 (The_End) annehmen" +
-                                                "Wenn das Argument weggelassen wird, wird von der Dimension des command Ausführers ausgegangen\n" +
-                                                "Die Parameter x z und y stehen für die Koordinaten der zu registrierenden Truhe. " +
-                                                "Falls diese Argumente Weggelassen werden wird von dem derzeitig betrachteten Block ausgegangen.\n").build();
-                                commandSender.sendMessage(comp);
-                                break;
-                            case "remove":
-                                comp = Component.text()
-                                        .content("Beschreibung: wird zur Deregestrierung einer Truhe im GZ-Plugin genutzt.\n" +
-                                                "Nutzung: gzp remove [<worldId>] [<x> <z> <y>]\n" +
-                                                "Parameterbeschreibung: worldId beschreibt die Dimension inder sich die zu deregistrierende Truhe befindet" +
-                                                "das Argument kann den Wert 0 (OverWorld), 1 (Nether) oder 2 (The_End) annehmen" +
-                                                "Wenn das Argument weggelassen wird, wird von der Dimension des command Ausführers ausgegangen.\n" +
-                                                "Die Parameter x z und y stehen für die Koordinaten der zu deregistrierenden Truhe. " +
-                                                "Falls diese Argumente Weggelassen werden wird von dem derzeitig betrachteten Block innerhalb 10 metern ausgegangen.").build();
-                                commandSender.sendMessage(comp);
-                                break;
-                            case "list":
-                                comp = Component.text()
-                                        .content("Beschreibung: wird zum auflisten von vom GZ-Plugin Registrierten Truhen verwendet").appendNewline()
-                                        .content("Nutzung: gzp list [<worldId>]")
-                                        .content("Parameterbeschreibung: worldId beschreibt die Dimension dessen Regestrierte Truhen aufgezählt werden sollten. " +
-                                                "Falls dieses Argument fehlt werden alle Registrierten Truhen Aufgezählt")
-                                        .content("Beschreibung: wird zum auflisten von vom GZ-Plugin Registrierten Truhen verwendet\n" +
-                                                "Nutzung: gzp list [<worldId>]\n" +
-                                                "Parameterbeschreibung: worldId beschreibt die Dimension dessen Registrierte Truhe aufgezählt werden sollten. " +
-                                                "das Argument kann den Wert 0 (OverWorld), 1 (Nether) oder 2 (The_End) annehmen. " +
-                                                "Falls dieses Argument fehlt werden alle Registrierten Truhen Aufgezählt").build();
-                                commandSender.sendMessage(comp);
-                            default:
-                                commandSender.sendMessage(Component.text("invalid Argument").color(NamedTextColor.RED));
-                                break;
-                        }
+                        return displayHelp(commandSender, null);
+                    } else {
+                        return displayHelp(commandSender, strings[1]);
                     }
                 case "add":
                     if (strings.length == 1) {
@@ -104,6 +57,8 @@ public class GrafZahlenCommand implements CommandExecutor {
                     }
                 case "list":
                     return listChest(commandSender);
+                case "answer":
+                    return giveAnswer(commandSender, strings[1]);
                 default:
                     return false;
             }
@@ -124,7 +79,7 @@ public class GrafZahlenCommand implements CommandExecutor {
             Player p = (Player) commandSender;
             Block targetBlock = p.getTargetBlockExact(10);
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block gefunden");
-            return this.addBlocktoChestSet(targetBlock);
+            return this.addBlocktoChestSetAndPlayerAllowed(targetBlock);
         }
         else {
             if (stringArrayHasNullValue(strings)) return false;
@@ -152,7 +107,7 @@ public class GrafZahlenCommand implements CommandExecutor {
             }
             Block blockAtLoc = currentworld.getBlockAt(x, y, z);
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block gefunden");
-            return this.addBlocktoChestSet(blockAtLoc);
+            return this.addBlocktoChestSetAndPlayerAllowed(blockAtLoc);
         }
     }
 
@@ -166,13 +121,13 @@ public class GrafZahlenCommand implements CommandExecutor {
             Player p = (Player) commandSender;
             Block targetBlock = p.getTargetBlockExact(10);
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block gefunden");
-            return this.removeBlockfromChestSet(targetBlock);
+            return this.removeBlockfromChestSetAndPlayersAllowed(targetBlock);
         }
         else {
             if (stringArrayHasNullValue(strings)) return false;
             World currentworld;
             if (strings.length == 1){
-                return this.removeAllChestsOfWorldFromChestSet(strings[0]);
+                return this.removeAllChestsOfWorldFromChestSetAndPlayersAllowed(strings[0]);
             }
             int x, z, y;
             if (strings.length == 3) {
@@ -197,7 +152,7 @@ public class GrafZahlenCommand implements CommandExecutor {
             }
             Block blockAtLoc = currentworld.getBlockAt(x, y, z);
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block gefunden");
-            return this.removeBlockfromChestSet(blockAtLoc);
+            return this.removeBlockfromChestSetAndPlayersAllowed(blockAtLoc);
         }
     }
 
@@ -215,30 +170,118 @@ public class GrafZahlenCommand implements CommandExecutor {
         }
     }
 
-    private boolean addBlocktoChestSet(Block block) {
+    private boolean addBlocktoChestSetAndPlayerAllowed(Block block) {
         if (isBlockChestType(block)) {
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block ist Chest");
             Chest chest = (Chest) block.getState();
             GrafZahlenPlugin.CHEST_SET.add(chest);
+            GrafZahlenPlugin.CHEST_ALLOWED_PLAYER_MAP.put(chest, new HashSet<Player>());
             return true;
         }
         GrafZahlenPlugin.LOGGER.log(Level.SEVERE, String.format("Block ist keine Chest (%s)", block.getType()));
         return false;
     }
 
-    private boolean removeBlockfromChestSet(Block block) {
+    private boolean giveAnswer(CommandSender commandSender, String answer) {
+        if (!(commandSender instanceof Player)) {
+            GrafZahlenPlugin.LOGGER.log(Level.SEVERE, "Der Sender ist kein Player");
+            return false;
+        }
+        double answerDouble = Double.parseDouble(answer);
+        Player sender = (Player) commandSender;
+        TermSegment termSegment = GrafZahlenPlugin.PLAYER_TERM_SEGMENT_MAP.get(sender);
+        if (termSegment.valueEquals(answerDouble, 0)) {
+            commandSender.sendMessage(Component.text(answer + " ist korrekt. Du darfst die Truhe öffnen"));
+            Chest chest = GrafZahlenPlugin.SEGMENT_CHEST_MAP.get(termSegment);
+            GrafZahlenPlugin.CHEST_ALLOWED_PLAYER_MAP.get(chest).add(sender);
+        } else {
+            commandSender.sendMessage(Component.text(answer + " ist leider nicht korrekt"));
+        }
+        return true;
+    }
+
+    private boolean displayHelp(CommandSender commandSender,@Nullable String topic) {Component comp;
+        if (topic == null) {
+            comp = Component.text()
+                    .content("Nutzung: gzp help <anderer command>\n" +
+                            "andere commands:\n" +
+                            "add\n" +
+                            "remove\n" +
+                            "list\n" +
+                            "answer").build();
+            commandSender.sendMessage(comp);
+            return true;
+        } else {
+            switch (topic) {
+                case "add":
+                    comp = Component.text()
+                            .content("Beschreibung: wird genutzt um eine neue Truhe für das GZ-Plugin zu registrieren\n" +
+                                    "Nutzung: gzp add [<worldId>] [<x> <z> <y>]\n" +
+                                    "Parameterbeschreibung: worldId beschreibt die Dimension inder sich die zu registrierende Truhe befindet" +
+                                    "das Argument kann den Wert 0 (OverWorld), 1 (Nether) oder 2 (The_End) annehmen" +
+                                    "Wenn das Argument weggelassen wird, wird von der Dimension des command Ausführers ausgegangen\n" +
+                                    "Die Parameter x z und y stehen für die Koordinaten der zu registrierenden Truhe. " +
+                                    "Falls diese Argumente Weggelassen werden wird von dem derzeitig betrachteten Block ausgegangen.\n").build();
+                    commandSender.sendMessage(comp);
+                    break;
+                case "remove":
+                    comp = Component.text()
+                            .content("Beschreibung: wird zur Deregestrierung einer Truhe im GZ-Plugin genutzt.\n" +
+                                    "Nutzung: gzp remove [<worldId>] [<x> <z> <y>]\n" +
+                                    "Parameterbeschreibung: worldId beschreibt die Dimension inder sich die zu deregistrierende Truhe befindet" +
+                                    "das Argument kann den Wert 0 (OverWorld), 1 (Nether) oder 2 (The_End) annehmen" +
+                                    "Wenn das Argument weggelassen wird, wird von der Dimension des command Ausführers ausgegangen.\n" +
+                                    "Die Parameter x z und y stehen für die Koordinaten der zu deregistrierenden Truhe. " +
+                                    "Falls diese Argumente Weggelassen werden wird von dem derzeitig betrachteten Block innerhalb 10 metern ausgegangen.").build();
+                    commandSender.sendMessage(comp);
+                    break;
+                case "list":
+                    comp = Component.text()
+                            .content("Beschreibung: wird zum auflisten von vom GZ-Plugin Registrierten Truhen verwendet").appendNewline()
+                            .content("Nutzung: gzp list [<worldId>]")
+                            .content("Parameterbeschreibung: worldId beschreibt die Dimension dessen Regestrierte Truhen aufgezählt werden sollten. " +
+                                    "Falls dieses Argument fehlt werden alle Registrierten Truhen Aufgezählt")
+                            .content("Beschreibung: wird zum auflisten von vom GZ-Plugin Registrierten Truhen verwendet\n" +
+                                    "Nutzung: gzp list [<worldId>]\n" +
+                                    "Parameterbeschreibung: worldId beschreibt die Dimension dessen Registrierte Truhe aufgezählt werden sollten. " +
+                                    "das Argument kann den Wert 0 (OverWorld), 1 (Nether) oder 2 (The_End) annehmen. " +
+                                    "Falls dieses Argument fehlt werden alle Registrierten Truhen Aufgezählt").build();
+                    commandSender.sendMessage(comp);
+                case "answer":
+                    comp = Component.text()
+                            .content("Beschreibung: wird zum beantworten von gestellten Aufgaben genutzt").appendNewline()
+                            .content("Nutzung: gzp answer <antwort>")
+                            .content("Parameterbeschreibung: antwort ist der wert mit der eine Aufgabenstellung beantwortet wird " +
+                                    "antwort muss eine Zahl sein. Ganzzahl-Stellen und nach-Komma-Stellen werden durch eine Punkt getrennt und nicht durch ein Komma")
+                            .build();
+                    commandSender.sendMessage(comp);
+
+                default:
+                    commandSender.sendMessage(Component.text("invalid Argument").color(NamedTextColor.RED));
+                    break;
+            }
+        }
+        return true;
+    }
+
+    private boolean removeBlockfromChestSetAndPlayersAllowed(Block block) {
         if (isBlockChestType(block)){
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block ist Chest");
             Chest chest = (Chest) block.getState();
+            GrafZahlenPlugin.CHEST_ALLOWED_PLAYER_MAP.remove(chest);
             return GrafZahlenPlugin.CHEST_SET.remove(chest);
         }
         GrafZahlenPlugin.LOGGER.log(Level.SEVERE, "Block ist keine Chest");
         return false;
     }
 
-    private boolean removeAllChestsOfWorldFromChestSet(String worldString) {
+    private boolean removeAllChestsOfWorldFromChestSetAndPlayersAllowed(String worldString) {
         if (worldString.equalsIgnoreCase("all")) {
-            GrafZahlenPlugin.CHEST_SET.removeIf((a) -> {return true;});
+            for (Chest key:
+                 GrafZahlenPlugin.CHEST_SET) {
+                GrafZahlenPlugin.CHEST_ALLOWED_PLAYER_MAP.remove(key);
+                GrafZahlenPlugin.CHEST_SET.remove(key);
+            }
             return true;
         }
         World world = Bukkit.getWorld(worldString);

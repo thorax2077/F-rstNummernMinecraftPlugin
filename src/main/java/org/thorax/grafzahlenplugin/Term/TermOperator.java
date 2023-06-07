@@ -1,6 +1,5 @@
 package org.thorax.grafzahlenplugin.Term;
 
-import com.sun.org.apache.xpath.internal.operations.Mult;
 
 public enum TermOperator {
     ADD,
