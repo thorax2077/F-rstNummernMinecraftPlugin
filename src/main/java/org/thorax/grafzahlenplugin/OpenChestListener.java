@@ -39,6 +39,7 @@ public class OpenChestListener implements Listener {
                         GrafZahlenPlugin.SEGMENT_CHEST_MAP.put(termSegment, chest);
                         player.sendMessage(Component.text("Was ist das ergebnis zu diesem Term: " + termSegment.toStringValuesRounded(0) + " ?"));
                         player.sendMessage(Component.text("Gib mir eine \\gzp answer!"));
+                        GrafZahlenPlugin.LOGGER.log(Level.INFO, "termSegment value: " + termSegment.getValue());
                     }
                 default:
             }

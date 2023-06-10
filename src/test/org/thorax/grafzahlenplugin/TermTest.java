@@ -1,7 +1,8 @@
 package org.thorax.grafzahlenplugin;
 
-import org.junit.jupiter.api.Test;
+import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.thorax.grafzahlenplugin.Term.TermGenerator;
 import org.thorax.grafzahlenplugin.Term.TermOperator;
 import org.thorax.grafzahlenplugin.Term.TermSegment;
@@ -73,6 +74,25 @@ public class TermTest {
         Assertions.assertEquals(18, seg4_1.calcTermSeg(seg4_2).getValue(), "3 + 6 sind nicht 18");
         Assertions.assertEquals(18, termSegment4.calcSubSeg(), "3 * (3 + 3) ist nicht 18");
         Assertions.assertTrue(termSegment4.valueEquals(18, 0), "termseg4 wert nicht 6 bei präzision 0");
+
+        TermSegment[] termseg5 = {
+                new TermSegment(TermOperator.MULT, 5),
+                new TermSegment(TermOperator.NONE, 5),
+        };
+        TermSegment[] termseg6 = {
+                new TermSegment(TermOperator.MULT, 5),
+                new TermSegment(TermOperator.NONE, 5)
+        };
+
+        TermSegment termseg7 = new TermSegment(TermOperator.MULT, termseg5);
+        TermSegment termseg8 = new TermSegment(TermOperator.NONE, termseg6);
+
+        TermSegment termSegment5 = new TermSegment(TermOperator.NONE, new TermSegment[]{termseg7, termseg8});
+        System.out.println(termSegment5.toStringValuesRounded(0));
+        System.out.println(termSegment5.toString());
+
+        double valueTermSeg5 = termSegment5.getValue();
+        Assertions.assertTrue(termSegment5.valueEquals(valueTermSeg5, 0), "not equal");
     }
 
     @Test
@@ -110,6 +130,14 @@ public class TermTest {
             Assertions.assertTrue(5 > term.getValue(), "term2 manche werte sind nicht kleiner als 5");
         }
         Assertions.assertEquals(1, term2.getDepth(), "term2 ist nicht 1 tief");
+    }
+
+    @Test
+    public void testTermGenTerms() {
+        TermSegment termSegment1 = TermGenerator.newTerm().termCount(2).maxDepth(2).valueRange(-20, 20).build();
+        System.out.println(termSegment1.toStringValuesRounded(0));
+        double value = termSegment1.calcSubSeg();
+        Assertions.assertTrue(termSegment1.valueEquals(value, 0), "nicht gleich");
     }
 
 

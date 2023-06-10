@@ -35,6 +35,14 @@ public class TermSegment {
         this.value = this.calcSubSeg();
     }
 
+    private TermSegment (TermOperator termOp, TermSegment[] subSeg, double val) {
+        if (subSeg != null) {
+            this.setSubSegment(subSeg);
+        }
+        this.operator = termOp;
+        this.value = val;
+    }
+
     public TermOperator getOperator() {
         return operator;
     }
@@ -42,7 +50,8 @@ public class TermSegment {
     private void setSubSegment(TermSegment[] subSegment) {
         if (subSegment[subSegment.length - 1].operator != TermOperator.NONE) {
             double value = subSegment[subSegment.length - 1].getValue();
-            subSegment[subSegment.length - 1] = new TermSegment(TermOperator.NONE, value);
+            TermSegment[] termSegments = subSegment[subSegment.length - 1].getSubSegment();
+            subSegment[subSegment.length - 1] = new TermSegment(TermOperator.NONE, termSegments, value);
         }
         for (TermSegment term :
                 subSegment) {
