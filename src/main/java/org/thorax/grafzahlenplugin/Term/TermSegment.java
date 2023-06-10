@@ -154,8 +154,8 @@ public class TermSegment {
     }
 
     public boolean valueEquals(double value, int precision) {
-        BigDecimal nativeValue = BigDecimal.valueOf(this.value).round(new MathContext(precision, RoundingMode.HALF_UP));
-        BigDecimal incomingValue = BigDecimal.valueOf(value).round(new MathContext(precision, RoundingMode.HALF_UP));
+        BigDecimal nativeValue = BigDecimal.valueOf(this.value).setScale(precision, RoundingMode.HALF_UP);
+        BigDecimal incomingValue = BigDecimal.valueOf(value).setScale(precision, RoundingMode.HALF_UP);
         return nativeValue.equals(incomingValue);
     }
 
@@ -174,7 +174,7 @@ public class TermSegment {
             } else if (precision == 0) {
                 toReturn += Integer.toString((int) value);
             } else {
-                toReturn += BigDecimal.valueOf(value).round(new MathContext(precision, RoundingMode.HALF_UP));
+                toReturn += BigDecimal.valueOf(value).setScale(precision, RoundingMode.HALF_UP);
             }
         }
 

@@ -188,6 +188,7 @@ public class GrafZahlenCommand implements CommandExecutor {
             return false;
         }
         double answerDouble = Double.parseDouble(answer);
+        GrafZahlenPlugin.LOGGER.log(Level.INFO, "antwort ist: " + answerDouble);
         Player sender = (Player) commandSender;
         TermSegment termSegment = GrafZahlenPlugin.PLAYER_TERM_SEGMENT_MAP.get(sender);
         if (termSegment.valueEquals(answerDouble, 0)) {

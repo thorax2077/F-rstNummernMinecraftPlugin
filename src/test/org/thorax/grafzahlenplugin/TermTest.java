@@ -7,6 +7,10 @@ import org.thorax.grafzahlenplugin.Term.TermGenerator;
 import org.thorax.grafzahlenplugin.Term.TermOperator;
 import org.thorax.grafzahlenplugin.Term.TermSegment;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+
 public class TermTest {
 
     @Test
@@ -134,9 +138,11 @@ public class TermTest {
 
     @Test
     public void testTermGenTerms() {
-        TermSegment termSegment1 = TermGenerator.newTerm().termCount(2).maxDepth(2).valueRange(-20, 20).build();
+        TermSegment termSegment1 = TermGenerator.newTerm().termCount(2).maxDepth(2).valueRange(-50, 50).build();
         System.out.println(termSegment1.toStringValuesRounded(0));
         double value = termSegment1.calcSubSeg();
+        value = BigDecimal.valueOf(value).round(new MathContext(0, RoundingMode.HALF_UP)).doubleValue();
+        BigDecimal bd = BigDecimal.valueOf(value).setScale(0, RoundingMode.HALF_UP);
         Assertions.assertTrue(termSegment1.valueEquals(value, 0), "nicht gleich");
     }
 
