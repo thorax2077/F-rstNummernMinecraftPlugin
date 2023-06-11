@@ -30,31 +30,11 @@ public class GrafZahlenCommand implements CommandExecutor {
             }
             switch (strings[0]) {
                 case "help":
-                    if (strings.length == 1) {
-                        return displayHelp(commandSender, null);
-                    } else {
-                        return displayHelp(commandSender, strings[1]);
-                    }
+		    return displayHelp(commandSender, strings.length == 1 ? null : strings[1]);
                 case "add":
-                    if (strings.length == 1) {
-                        return addChest(commandSender, null);
-                    }
-                    if (strings.length == 4) {
-                        return addChest(commandSender, Arrays.copyOfRange(strings, 1, 4));
-                    }
-                    if (strings.length == 5) {
-                        return addChest(commandSender, Arrays.copyOfRange(strings, 1, 5));
-                    }
+		    return addChest(commandSender, strings.length == 1 ? null : Arrays.copyOfRange(strings, 1, strings.length));
                 case "remove":
-                    if (strings.length == 1) {
-                        return removeChest(commandSender, null);
-                    } else if (strings.length == 2) {
-                        return removeChest(commandSender, Arrays.copyOfRange(strings, 1, 2));
-                    } else if (strings.length == 4) {
-                        return removeChest(commandSender, Arrays.copyOfRange(strings, 1, 4));
-                    }else if (strings.length == 5) {
-                        return removeChest(commandSender, Arrays.copyOfRange(strings, 1, 5));
-                    }
+		    return removeChest(commandSender, strings.length == 1 ? null : Arrays.copyOfRange(strings, 1, strings.length));
                 case "list":
                     return listChest(commandSender);
                 case "answer":
