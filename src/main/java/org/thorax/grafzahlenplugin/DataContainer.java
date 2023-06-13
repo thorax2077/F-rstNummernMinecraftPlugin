@@ -151,16 +151,7 @@ public class DataContainer implements Serializable, ConfigurationSerializable {
         Map<TermSegment, Chest> termSegmentChestMap =
                 new HashMap<>(deserializeTermSegmentChestMap(section.getConfigurationSection("TermSegmenChestMap")));
 
-        List<Location> segment_chest_map_chests = (List<Location>) section.getList("segment_chest_map_chests");
-        List<TermSegmentSerializationWrapper> segment_chest_map_terms =
-                (List<TermSegmentSerializationWrapper>) section.getList("segment_chest_map_terms");
-        if (segment_chest_map_chests.size() != segment_chest_map_terms.size()) {
-            throw new Exception("segment_chest_map_chests und segment_chest_map_terms nicht gleich groß");
-        }
-        for (int i = 0; i < segment_chest_map_chests.size(); i++) {
-            toReturn.segmentChestMap.put(
-                    segment_chest_map_terms.get(i).toTermSegment(), (Chest) segment_chest_map_chests.get(i).getBlock());
-        }
+        Map<>
 
         /*
         toReturn.put("player_term_player", player_term_player);
@@ -204,7 +195,30 @@ public class DataContainer implements Serializable, ConfigurationSerializable {
     }
 
     private static Map<Player, TermSegment> deserializePlayerTermSegmentMap(ConfigurationSection configurationSection) {
+        Map<Player, TermSegment> toReturn = new HashMap<>();
+        List<Player> players = (List<Player>) configurationSection.getList("players");
+        List<TermSegmentSerializationWrapper> termSegmentWrappers =
+                (List<TermSegmentSerializationWrapper>) configurationSection.getList("termSegmentWrappers");
+        for (int i = 0; i < players.size(); i++) {
+            toReturn.put(players.get(i).getPlayer(), termSegmentWrappers.get(i).toTermSegment());
+        }
+        return toReturn;
+    }
 
+    private static Map<Chest, Set<Player>> deserializeChestAllowedPlayers(ConfigurationSection configurationSection) {
+        Map <Chest, Set<Player>> toReturn = new HashMap<>();
+        List<Chest> chests = (List<Chest>) configurationSection.getList("chests");
+        List<List<Player>> playerSet = (List<List<Player>>) configurationSection.getList("playerSet");
+        Set<Player> tempPlayerSet;
+        for (int i = 0; i < chests.size(); i++) {
+            tempPlayerSet = new HashSet<>();
+            for (Player player :
+                    playerSet.get(i)) {
+                tempPlayerSet.add(player);
+            }
+            toReturn.put(chests.get(i), tempPlayerSet);
+        }
+        return toReturn;
     }
 
 }
