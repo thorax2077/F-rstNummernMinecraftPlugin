@@ -154,8 +154,8 @@ public class GrafZahlenCommand implements CommandExecutor {
         if (isBlockChestType(block)) {
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block ist Chest");
             Chest chest = (Chest) block.getState();
-            DataContainer.CHEST_SET.add(chest);
-            DataContainer.CHEST_ALLOWED_PLAYER_MAP.put(chest, new HashSet<Player>());
+            GrafZahlenPlugin.GrafZahlenData.getChestSet().add(chest);
+            GrafZahlenPlugin.GrafZahlenData.getChestAllowedPlayerMap().put(chest, new HashSet<Player>());
             return true;
         }
         GrafZahlenPlugin.LOGGER.log(Level.SEVERE, String.format("Block ist keine Chest (%s)", block.getType()));
@@ -170,11 +170,11 @@ public class GrafZahlenCommand implements CommandExecutor {
         double answerDouble = Double.parseDouble(answer);
         GrafZahlenPlugin.LOGGER.log(Level.INFO, "antwort ist: " + answerDouble);
         Player sender = (Player) commandSender;
-        TermSegment termSegment = DataContainer.PLAYER_TERM_SEGMENT_MAP.get(sender);
+        TermSegment termSegment = GrafZahlenPlugin.GrafZahlenData.getPlayerTermSegmentHashMap().get(sender);
         if (termSegment.valueEquals(answerDouble, 0)) {
             commandSender.sendMessage(Component.text(answer + " ist korrekt. Du darfst die Truhe öffnen"));
-            Chest chest = DataContainer.SEGMENT_CHEST_MAP.get(termSegment);
-            DataContainer.CHEST_ALLOWED_PLAYER_MAP.get(chest).add(sender);
+            Chest chest = GrafZahlenPlugin.GrafZahlenData.getSegmentChestMap().get(termSegment);
+            GrafZahlenPlugin.GrafZahlenData.getChestAllowedPlayerMap().get(chest).add(sender);
         } else {
             commandSender.sendMessage(Component.text(answer + " ist leider nicht korrekt"));
         }
@@ -249,8 +249,8 @@ public class GrafZahlenCommand implements CommandExecutor {
         if (isBlockChestType(block)){
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block ist Chest");
             Chest chest = (Chest) block.getState();
-            DataContainer.CHEST_ALLOWED_PLAYER_MAP.remove(chest);
-            return DataContainer.CHEST_SET.remove(chest);
+            GrafZahlenPlugin.GrafZahlenData.getChestAllowedPlayerMap().remove(chest);
+            return GrafZahlenPlugin.GrafZahlenData.getChestSet().remove(chest);
         }
         GrafZahlenPlugin.LOGGER.log(Level.SEVERE, "Block ist keine Chest");
         return false;
@@ -259,17 +259,17 @@ public class GrafZahlenCommand implements CommandExecutor {
     private boolean removeAllChestsOfWorldFromChestSetAndPlayersAllowed(String worldString) {
         if (worldString.equalsIgnoreCase("all")) {
             for (Chest key:
-                 DataContainer.CHEST_SET) {
-                DataContainer.CHEST_ALLOWED_PLAYER_MAP.remove(key);
-                DataContainer.CHEST_SET.remove(key);
+                    GrafZahlenPlugin.GrafZahlenData.getChestSet()) {
+                GrafZahlenPlugin.GrafZahlenData.getChestAllowedPlayerMap().remove(key);
+                GrafZahlenPlugin.GrafZahlenData.getChestSet().remove(key);
             }
             return true;
         }
         World world = Bukkit.getWorld(worldString);
         for (Chest chest :
-                DataContainer.CHEST_SET) {
+                GrafZahlenPlugin.GrafZahlenData.getChestSet()) {
             if (chest.getWorld().equals(world)) {
-                DataContainer.CHEST_SET.remove(chest);
+                GrafZahlenPlugin.GrafZahlenData.getChestSet().remove(chest);
             }
         }
         return true;
@@ -277,7 +277,7 @@ public class GrafZahlenCommand implements CommandExecutor {
 
     private boolean listChest(CommandSender commandSender) {
         for (Chest chest:
-             DataContainer.CHEST_SET) {
+                GrafZahlenPlugin.GrafZahlenData.getChestSet()) {
             Component comp = Component.text(String.format("world: %s\txyz: (%s|%s|%s)", chest.getWorld().getName(), chest.getX(), chest.getY(), chest.getZ()));
             commandSender.sendMessage(comp);
         }

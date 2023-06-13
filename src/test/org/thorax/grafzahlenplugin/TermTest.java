@@ -1,6 +1,5 @@
 package org.thorax.grafzahlenplugin;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.thorax.grafzahlenplugin.Term.TermGenerator;
@@ -106,17 +105,17 @@ public class TermTest {
         Assertions.assertEquals(3, term3.getDepth(), "term3 ist nicht 3 tief");
 
         TermSegment term4 = TermGenerator.newTerm().termCount(5).build();
-        Assertions.assertEquals(5, term4.getSubSegment().length, "term4 hat nicht 5 SubSegmente");
+        Assertions.assertEquals(5, term4.getSubSegments().length, "term4 hat nicht 5 SubSegmente");
 
         TermSegment term5 = TermGenerator.newTerm().termCount(10).valueRange(-15, 15).build();
         for (TermSegment term :
-                term4.getSubSegment()) {
+                term4.getSubSegments()) {
             Assertions.assertTrue(-15 < term.getValue(), "term4 nicht  alle werte sind größer als -15");
             Assertions.assertTrue(15 > term.getValue(), "term4 nicht alle werte sind kleiner als 15");
         };
 
         TermSegment term1 = TermGenerator.newTerm().maxDepth(2).valueRange(-10, 10).termCount(3).build();
-        Assertions.assertEquals(3, term1.getSubSegment().length, "term1 ist nicht 3 Subterme lang");
+        Assertions.assertEquals(3, term1.getSubSegments().length, "term1 ist nicht 3 Subterme lang");
         /*
         for (TermSegment term :
                 term1.getSubSegment()) {
@@ -127,9 +126,9 @@ public class TermTest {
         Assertions.assertEquals(2, term1.getDepth(), "term1 ist nicht 2 tief");
 
         TermSegment term2 = TermGenerator.newTerm().build();
-        Assertions.assertEquals(2, term2.getSubSegment().length, "term2 ist nicht 2 Subterme lang");
+        Assertions.assertEquals(2, term2.getSubSegments().length, "term2 ist nicht 2 Subterme lang");
         for (TermSegment term :
-                term2.getSubSegment()) {
+                term2.getSubSegments()) {
             Assertions.assertTrue(-5 < term.getValue(), "term2 manche werte sind nicht größer als -5");
             Assertions.assertTrue(5 > term.getValue(), "term2 manche werte sind nicht kleiner als 5");
         }
@@ -144,6 +143,23 @@ public class TermTest {
         value = BigDecimal.valueOf(value).round(new MathContext(0, RoundingMode.HALF_UP)).doubleValue();
         BigDecimal bd = BigDecimal.valueOf(value).setScale(0, RoundingMode.HALF_UP);
         Assertions.assertTrue(termSegment1.valueEquals(value, 0), "nicht gleich");
+    }
+
+    @Test
+    public void testTermSegmentSerializer() {
+
+        TermSegment seg1_1 = new TermSegment(TermOperator.ADD, 3);
+        TermSegment seg1_2 = new TermSegment(TermOperator.MULT, 3);
+        TermSegment seg1_3 = new TermSegment(TermOperator.NONE, 3);
+        TermSegment[] termSeg1_1 = {
+                seg1_1,
+                seg1_2,
+                seg1_3
+        };
+
+        TermSegment termSegment1 = new TermSegment(TermOperator.NONE, termSeg1_1);
+
+        TermSegmentSerializationWrapper tss = new TermSegmentSerializationWrapper(termSegment1);
     }
 
 

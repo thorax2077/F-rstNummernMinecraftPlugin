@@ -103,7 +103,7 @@ public class TermGenerator implements Cloneable{
         for (TermSegment term :
                 termArr) {
             if (term == null) continue;
-            if (term.getSubSegment() != null) {
+            if (term.getSubSegments() != null) {
                 subSegmentNotPresent = false;
                 break;
             }

@@ -1,56 +1,210 @@
 package org.thorax.grafzahlenplugin;
 
-import jdk.internal.misc.OSEnvironment;
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Chest;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.thorax.grafzahlenplugin.Term.TermSegment;
 
+import javax.crypto.ExemptionMechanismException;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public class DataContainer implements Serializable {
+@SerializableAs("DataContainer")
+public class DataContainer implements Serializable, ConfigurationSerializable {
 
     private static final long serialVersionUID = 1L;
-    public static Set<Chest> CHEST_SET = new HashSet<>();
-    public static Map<TermSegment, Chest> SEGMENT_CHEST_MAP = new HashMap<TermSegment, Chest>();
-    public static Map<Player, TermSegment> PLAYER_TERM_SEGMENT_MAP = new HashMap<Player, TermSegment>();
-    public static Map<Chest, Set<Player>> CHEST_ALLOWED_PLAYER_MAP = new HashMap<>();
 
-    public static void saveData() {
-        try {
-            File file = new File("GrafZahlen.data");
-            if (file.createNewFile()) {
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(Files.newOutputStream(file.toPath()));
-                objectOutputStream.writeObject((HashSet<Chest>) CHEST_SET);
-                objectOutputStream.writeObject((HashMap<TermSegment, Chest>) SEGMENT_CHEST_MAP);
-                objectOutputStream.writeObject((HashMap<Player, TermSegment>) PLAYER_TERM_SEGMENT_MAP);
-                objectOutputStream.writeObject((HashMap<Chest, Set<Player>>) CHEST_ALLOWED_PLAYER_MAP);
-                objectOutputStream.flush();
-                objectOutputStream.close();
-            }
-        } catch (IOException fileNotFoundException) {
-            fileNotFoundException.printStackTrace();
-        }
+    public Set<Chest> getChestSet() {
+        return chestSet;
     }
 
-    public static void loadData() {
-        try {
-            File file = new File("GrafZahlen.data");
-            if (file.createNewFile()) {
-                ObjectInputStream objectInputStream = new ObjectInputStream(Files.newInputStream(file.toPath()));
-                CHEST_SET = (HashSet<Chest>) objectInputStream.readObject();
-                SEGMENT_CHEST_MAP = (HashMap<TermSegment, Chest>) objectInputStream.readObject();
-                PLAYER_TERM_SEGMENT_MAP = (HashMap<Player, TermSegment>) objectInputStream.readObject();
-                CHEST_ALLOWED_PLAYER_MAP = (HashMap<Chest, Set<Player>>) objectInputStream.readObject();
-            }
-
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+    public Map<TermSegment, Chest> getSegmentChestMap() {
+        return segmentChestMap;
     }
+
+    public Map<Player, TermSegment> getPlayerTermSegmentHashMap() {
+        return playerTermSegmentHashMap;
+    }
+
+    public Map<Chest, Set<Player>> getChestAllowedPlayerMap() {
+        return chestAllowedPlayerMap;
+    }
+
+
+    private  Set<Chest> chestSet = new HashSet<>();
+    private Map<TermSegment, Chest> segmentChestMap = new HashMap<TermSegment, Chest>();
+    private  Map<Player, TermSegment> playerTermSegmentHashMap = new HashMap<Player, TermSegment>();
+    private  Map<Chest, Set<Player>> chestAllowedPlayerMap = new HashMap<>();
+
+
+    public DataContainer() {
+        chestSet = new HashSet<>();
+        segmentChestMap = new HashMap<>();
+        playerTermSegmentHashMap = new HashMap<>();
+        chestAllowedPlayerMap = new HashMap<>();
+    }
+
+    DataContainer(Set<Chest> chestSet, Map<TermSegment, Chest> termSegmentChestMap,
+                  Map<Player, TermSegment> playerTermSegmentMap, Map<Chest, Set<Player>> chestPlayerMap) {
+        this.chestSet = chestSet;
+        this.segmentChestMap = termSegmentChestMap;
+        this.playerTermSegmentHashMap = playerTermSegmentMap;
+        this.chestAllowedPlayerMap = chestPlayerMap;
+    }
+
+    @Override
+    public @NotNull Map<String, Object> serialize() {
+
+        Map<String, Object> toReturn = new HashMap<>();
+
+        toReturn.put("ChestSet" ,this.serializeChestSet());
+
+        toReturn.put("TermSegmenChestMap" ,this.serializeTermSegmentChestMap());
+
+        toReturn.put("PlayerTermSegmentMap" ,this.serializePlayerTermSegmentMap());
+
+        toReturn.put("ChestAllowedPlayersMap" ,this.serializeChestAllowedPlayersMap());
+
+
+        return toReturn;
+    }
+
+    private Map<String, Object> serializeChestSet() {
+        Map<String, Object> toReturn = new HashMap<>();
+        List<Location> chest_locations = new ArrayList<>();
+        for (Chest chest :
+                chestSet) {
+            chest_locations.add(chest.getLocation());
+        }
+        toReturn.put("locations", chest_locations);
+        return toReturn;
+    }
+
+    private Map<String, Object> serializeTermSegmentChestMap() {
+        Map<String, Object> toReturn = new HashMap<>();
+
+        List<Location> segment_chest_map_chests = new ArrayList<>();
+        List<TermSegmentSerializationWrapper> segment_chest_map_terms = new ArrayList<>();
+        Chest curChest;
+        for (TermSegment termseg :
+                segmentChestMap.keySet()) {
+            curChest = segmentChestMap.get(termseg);
+            segment_chest_map_chests.add(curChest.getLocation());
+            segment_chest_map_terms.add(new TermSegmentSerializationWrapper(termseg));
+        }
+
+        toReturn.put("chests", segment_chest_map_chests);
+        toReturn.put("termSegmentWrappers", segment_chest_map_terms);
+
+        return toReturn;
+    }
+
+    private Map<String, Object> serializePlayerTermSegmentMap() {
+        Map<String, Object> toReturn = new HashMap<>();
+
+        List<Player> players = new ArrayList<>();
+        List<TermSegmentSerializationWrapper> termSegmentWrappers = new ArrayList<>();
+
+        for (Player player :
+                this.playerTermSegmentHashMap.keySet()) {
+            players.add(player);
+            termSegmentWrappers.add(new TermSegmentSerializationWrapper(this.playerTermSegmentHashMap.get(player)));
+        }
+
+        toReturn.put("players", players);
+        toReturn.put("termSegmentWrappers", termSegmentWrappers);
+
+        return toReturn;
+    }
+
+    private Map<String, Object> serializeChestAllowedPlayersMap() {
+        Map<String, Object> toReturn = new HashMap<>();
+
+        List<Location> chest_allowed_player_map_chests = new ArrayList<>();
+        List<List<OfflinePlayer>> chest_allowed_player_map_playerSetLists = new ArrayList<>();
+        List<OfflinePlayer> chest_allowed_player_map_playerSets;
+        Set<Player> playerSet;
+        for (Chest chest :
+                chestAllowedPlayerMap.keySet()) {
+            playerSet = chestAllowedPlayerMap.get(chest);
+            chest_allowed_player_map_playerSets = new ArrayList<>(playerSet);
+            chest_allowed_player_map_playerSetLists.add(chest_allowed_player_map_playerSets);
+            chest_allowed_player_map_chests.add(chest.getLocation());
+        }
+        toReturn.put("chests", chest_allowed_player_map_chests);
+        toReturn.put("playerSet", chest_allowed_player_map_playerSetLists);
+
+        return toReturn;
+
+    }
+
+    public static DataContainer deserialize(ConfigurationSection section) throws Exception {
+        DataContainer toReturn = new DataContainer();
+
+        Set<Chest> chests = new HashSet<>(deserializeChestSet(section.getConfigurationSection("ChestSet")));
+
+        Map<TermSegment, Chest> termSegmentChestMap =
+                new HashMap<>(deserializeTermSegmentChestMap(section.getConfigurationSection("TermSegmenChestMap")));
+
+        List<Location> segment_chest_map_chests = (List<Location>) section.getList("segment_chest_map_chests");
+        List<TermSegmentSerializationWrapper> segment_chest_map_terms =
+                (List<TermSegmentSerializationWrapper>) section.getList("segment_chest_map_terms");
+        if (segment_chest_map_chests.size() != segment_chest_map_terms.size()) {
+            throw new Exception("segment_chest_map_chests und segment_chest_map_terms nicht gleich groß");
+        }
+        for (int i = 0; i < segment_chest_map_chests.size(); i++) {
+            toReturn.segmentChestMap.put(
+                    segment_chest_map_terms.get(i).toTermSegment(), (Chest) segment_chest_map_chests.get(i).getBlock());
+        }
+
+        /*
+        toReturn.put("player_term_player", player_term_player);
+        toReturn.put("player_term_TermSegments", player_term_TermSegments);
+         */
+        List<Player> playerTermPlayers = (List<Player>) section.getList("player_term_player");
+        List<TermSegment> playerTermTermSegments = new ArrayList<>((de));
+
+        /*
+        toReturn.put("chest_allowed_player_map_chests", chest_allowed_player_map_chests);
+        toReturn.put("chest_allowed_player_map_playerSetLists", chest_allowed_player_map_playerSetLists);
+        */
+
+        return toReturn;
+    }
+
+    private static Set<Chest> deserializeChestSet(ConfigurationSection configurationSection) {
+        Set<Chest> toReturn = new HashSet<>();
+        List<Location> ChestLocations = (List<Location>) configurationSection.getList("locations");
+
+        for (Location location :
+                ChestLocations) {
+            toReturn.add((Chest) location.getBlock());
+        }
+
+        return toReturn;
+    }
+
+    private static Map<TermSegment, Chest> deserializeTermSegmentChestMap(ConfigurationSection configurationSection) {
+        Map<TermSegment, Chest> toReturn = new HashMap<>();
+
+        List<Location> segment_chest_map_chests = (List<Location>) configurationSection.getList("chests");
+        List<TermSegmentSerializationWrapper> segment_chest_map_terms =
+                (List<TermSegmentSerializationWrapper>) configurationSection.getList("termSegmentWrappers");
+        for (int i = 0; i < segment_chest_map_chests.size(); i++) {
+            toReturn.put(
+                    segment_chest_map_terms.get(i).toTermSegment(), (Chest) segment_chest_map_chests.get(i).getBlock());
+        }
+
+        return toReturn;
+    }
+
+    private static Map<Player, TermSegment> deserializePlayerTermSegmentMap(ConfigurationSection configurationSection) {
+
+    }
+
 }

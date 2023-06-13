@@ -28,15 +28,16 @@ public class OpenChestListener implements Listener {
                 case ENDER_CHEST:
                 case TRAPPED_CHEST:
                     Chest chest = (Chest) block.getState();
-                    if (DataContainer.CHEST_SET.contains(chest) && !DataContainer.CHEST_ALLOWED_PLAYER_MAP.get(chest).contains(ev.getPlayer())) {
+                    if (GrafZahlenPlugin.GrafZahlenData.getChestSet().contains(chest)
+                            && !GrafZahlenPlugin.GrafZahlenData.getChestAllowedPlayerMap().get(chest).contains(ev.getPlayer())) {
                         ev.setCancelled(true);
                         GrafZahlenPlugin.LOGGER.log(Level.INFO, "[GrafZahl] interacted with a chest block");
                         Player player = ev.getPlayer();
                         player.sendMessage(Component.text("eins hahaha. zwei hahaha"));
                         TermSegment termSegment = TermGenerator.newTerm()
                                 .maxDepth(2).termCount(2).valueRange(-50, 50).build();
-                        DataContainer.PLAYER_TERM_SEGMENT_MAP.put(ev.getPlayer(), termSegment);
-                        DataContainer.SEGMENT_CHEST_MAP.put(termSegment, chest);
+                        GrafZahlenPlugin.GrafZahlenData.getPlayerTermSegmentHashMap().put(ev.getPlayer(), termSegment);
+                        GrafZahlenPlugin.GrafZahlenData.getSegmentChestMap().put(termSegment, chest);
                         player.sendMessage(Component.text("Was ist das ergebnis zu diesem Term: " + termSegment.toStringValuesRounded(0) + " ?"));
                         player.sendMessage(Component.text("Gib mir eine \\gzp answer!"));
                         GrafZahlenPlugin.LOGGER.log(Level.INFO, "termSegment value: " + termSegment.getValue());
