@@ -61,6 +61,10 @@
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -75,6 +79,12 @@
             <artifactId>junit-jupiter</artifactId>
             <version>RELEASE</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.rogermiranda1000</groupId>
+            <artifactId>WatchWolf-Tester</artifactId>
+            <version>0.1.16</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

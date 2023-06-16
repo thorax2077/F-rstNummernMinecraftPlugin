@@ -144,28 +144,21 @@ public class DataContainer implements Serializable, ConfigurationSerializable {
     }
 
     public static DataContainer deserialize(ConfigurationSection section) throws Exception {
-        DataContainer toReturn = new DataContainer();
+        if (section == null) {
+            return null;
+        }
 
-        Set<Chest> chests = new HashSet<>(deserializeChestSet(section.getConfigurationSection("ChestSet")));
+        Set<Chest> chests = new HashSet<>(deserializeChestSet(Objects.requireNonNull(section.getConfigurationSection("ChestSet"))));
 
         Map<TermSegment, Chest> termSegmentChestMap =
-                new HashMap<>(deserializeTermSegmentChestMap(section.getConfigurationSection("TermSegmenChestMap")));
+                new HashMap<>(deserializeTermSegmentChestMap(Objects.requireNonNull(section.getConfigurationSection("TermSegmenChestMap"))));
 
-        Map<>
+        Map<Player, TermSegment> playerTermSegmentMap =
+                new HashMap<>(deserializePlayerTermSegmentMap(Objects.requireNonNull(section.getConfigurationSection("PlayerTermSegmentMap"))));
 
-        /*
-        toReturn.put("player_term_player", player_term_player);
-        toReturn.put("player_term_TermSegments", player_term_TermSegments);
-         */
-        List<Player> playerTermPlayers = (List<Player>) section.getList("player_term_player");
-        List<TermSegment> playerTermTermSegments = new ArrayList<>((de));
-
-        /*
-        toReturn.put("chest_allowed_player_map_chests", chest_allowed_player_map_chests);
-        toReturn.put("chest_allowed_player_map_playerSetLists", chest_allowed_player_map_playerSetLists);
-        */
-
-        return toReturn;
+        Map<Chest, Set<Player>> chestSetHashMap =
+                new HashMap<>(deserializeChestAllowedPlayers(Objects.requireNonNull(section.getConfigurationSection("ChestAllowedPlayersMap"))));
+        return new DataContainer(chests, termSegmentChestMap, playerTermSegmentMap, chestSetHashMap);
     }
 
     private static Set<Chest> deserializeChestSet(ConfigurationSection configurationSection) {

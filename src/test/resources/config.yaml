@@ -1,0 +1,6 @@
+server-type:
+  -Paper:
+    - "1.19.4"
+users:
+  - "gamer1"
+plugin: "target/Grafzahlenplugin-1.1-SNAPSHOT.jar"
