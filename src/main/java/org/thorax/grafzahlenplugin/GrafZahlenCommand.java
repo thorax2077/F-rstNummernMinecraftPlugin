@@ -30,31 +30,11 @@ public class GrafZahlenCommand implements CommandExecutor {
             }
             switch (strings[0]) {
                 case "help":
-                    if (strings.length == 1) {
-                        return displayHelp(commandSender, null);
-                    } else {
-                        return displayHelp(commandSender, strings[1]);
-                    }
+		    return displayHelp(commandSender, strings.length == 1 ? null : strings[1]);
                 case "add":
-                    if (strings.length == 1) {
-                        return addChest(commandSender, null);
-                    }
-                    if (strings.length == 4) {
-                        return addChest(commandSender, Arrays.copyOfRange(strings, 1, 4));
-                    }
-                    if (strings.length == 5) {
-                        return addChest(commandSender, Arrays.copyOfRange(strings, 1, 5));
-                    }
+		    return addChest(commandSender, strings.length == 1 ? null : Arrays.copyOfRange(strings, 1, strings.length));
                 case "remove":
-                    if (strings.length == 1) {
-                        return removeChest(commandSender, null);
-                    } else if (strings.length == 2) {
-                        return removeChest(commandSender, Arrays.copyOfRange(strings, 1, 2));
-                    } else if (strings.length == 4) {
-                        return removeChest(commandSender, Arrays.copyOfRange(strings, 1, 4));
-                    }else if (strings.length == 5) {
-                        return removeChest(commandSender, Arrays.copyOfRange(strings, 1, 5));
-                    }
+		    return removeChest(commandSender, strings.length == 1 ? null : Arrays.copyOfRange(strings, 1, strings.length));
                 case "list":
                     return listChest(commandSender);
                 case "answer":
@@ -174,8 +154,8 @@ public class GrafZahlenCommand implements CommandExecutor {
         if (isBlockChestType(block)) {
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block ist Chest");
             Chest chest = (Chest) block.getState();
-            GrafZahlenPlugin.CHEST_SET.add(chest);
-            GrafZahlenPlugin.CHEST_ALLOWED_PLAYER_MAP.put(chest, new HashSet<Player>());
+            GrafZahlenPlugin.GrafZahlenData.getChestSet().add(chest);
+            GrafZahlenPlugin.GrafZahlenData.getChestAllowedPlayerMap().put(chest, new HashSet<Player>());
             return true;
         }
         GrafZahlenPlugin.LOGGER.log(Level.SEVERE, String.format("Block ist keine Chest (%s)", block.getType()));
@@ -188,12 +168,13 @@ public class GrafZahlenCommand implements CommandExecutor {
             return false;
         }
         double answerDouble = Double.parseDouble(answer);
+        GrafZahlenPlugin.LOGGER.log(Level.INFO, "antwort ist: " + answerDouble);
         Player sender = (Player) commandSender;
-        TermSegment termSegment = GrafZahlenPlugin.PLAYER_TERM_SEGMENT_MAP.get(sender);
+        TermSegment termSegment = GrafZahlenPlugin.GrafZahlenData.getPlayerTermSegmentHashMap().get(sender);
         if (termSegment.valueEquals(answerDouble, 0)) {
             commandSender.sendMessage(Component.text(answer + " ist korrekt. Du darfst die Truhe öffnen"));
-            Chest chest = GrafZahlenPlugin.SEGMENT_CHEST_MAP.get(termSegment);
-            GrafZahlenPlugin.CHEST_ALLOWED_PLAYER_MAP.get(chest).add(sender);
+            Chest chest = GrafZahlenPlugin.GrafZahlenData.getSegmentChestMap().get(termSegment);
+            GrafZahlenPlugin.GrafZahlenData.getChestAllowedPlayerMap().get(chest).add(sender);
         } else {
             commandSender.sendMessage(Component.text(answer + " ist leider nicht korrekt"));
         }
@@ -268,8 +249,8 @@ public class GrafZahlenCommand implements CommandExecutor {
         if (isBlockChestType(block)){
             GrafZahlenPlugin.LOGGER.log(Level.INFO, "Block ist Chest");
             Chest chest = (Chest) block.getState();
-            GrafZahlenPlugin.CHEST_ALLOWED_PLAYER_MAP.remove(chest);
-            return GrafZahlenPlugin.CHEST_SET.remove(chest);
+            GrafZahlenPlugin.GrafZahlenData.getChestAllowedPlayerMap().remove(chest);
+            return GrafZahlenPlugin.GrafZahlenData.getChestSet().remove(chest);
         }
         GrafZahlenPlugin.LOGGER.log(Level.SEVERE, "Block ist keine Chest");
         return false;
@@ -278,17 +259,17 @@ public class GrafZahlenCommand implements CommandExecutor {
     private boolean removeAllChestsOfWorldFromChestSetAndPlayersAllowed(String worldString) {
         if (worldString.equalsIgnoreCase("all")) {
             for (Chest key:
-                 GrafZahlenPlugin.CHEST_SET) {
-                GrafZahlenPlugin.CHEST_ALLOWED_PLAYER_MAP.remove(key);
-                GrafZahlenPlugin.CHEST_SET.remove(key);
+                    GrafZahlenPlugin.GrafZahlenData.getChestSet()) {
+                GrafZahlenPlugin.GrafZahlenData.getChestAllowedPlayerMap().remove(key);
+                GrafZahlenPlugin.GrafZahlenData.getChestSet().remove(key);
             }
             return true;
         }
         World world = Bukkit.getWorld(worldString);
         for (Chest chest :
-                GrafZahlenPlugin.CHEST_SET) {
+                GrafZahlenPlugin.GrafZahlenData.getChestSet()) {
             if (chest.getWorld().equals(world)) {
-                GrafZahlenPlugin.CHEST_SET.remove(chest);
+                GrafZahlenPlugin.GrafZahlenData.getChestSet().remove(chest);
             }
         }
         return true;
@@ -296,7 +277,7 @@ public class GrafZahlenCommand implements CommandExecutor {
 
     private boolean listChest(CommandSender commandSender) {
         for (Chest chest:
-             GrafZahlenPlugin.CHEST_SET) {
+                GrafZahlenPlugin.GrafZahlenData.getChestSet()) {
             Component comp = Component.text(String.format("world: %s\txyz: (%s|%s|%s)", chest.getWorld().getName(), chest.getX(), chest.getY(), chest.getZ()));
             commandSender.sendMessage(comp);
         }
