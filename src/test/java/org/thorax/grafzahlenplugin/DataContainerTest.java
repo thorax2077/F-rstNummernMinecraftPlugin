@@ -7,6 +7,7 @@ import dev.watchwolf.server.ServerStopNotifier;
 import dev.watchwolf.tester.AbstractTest;
 import dev.watchwolf.tester.ExtendedClientPetition;
 import dev.watchwolf.tester.TesterConnector;
+import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +20,10 @@ import java.util.Set;
 @ExtendWith(DataContainerTest.class)
 public class DataContainerTest extends AbstractTest {
 
-
+    @Override
+    public String getConfigFile() {
+        return "src/test/resources/config.yaml";
+    }
 
     @ParameterizedTest
     @ArgumentsSource(DataContainerTest.class)
@@ -34,8 +38,28 @@ public class DataContainerTest extends AbstractTest {
         extendedClientPetition.runCommand("gzp add");
         extendedClientPetition.use();
 
-        Set<org.bukkit.block.Chest> chest1 = GrafZahlenPlugin.GrafZahlenData.getChestSet();
-        testerConnector.
+        GrafZahlenPlugin.GrafZahlenData.getChestSet()
+                .forEach((chestx) -> {
+                    System.out.println(chestx.getLocation());
+                });
+        GrafZahlenPlugin.GrafZahlenData.getPlayerTermSegmentHashMap()
+                .forEach((player, term) -> {
+                    System.out.println(String.format("player: %s\tterm: %s", player.getName(), term.toString()));
+                });
+        GrafZahlenPlugin.GrafZahlenData.getSegmentChestMap()
+                .forEach((term, chestx) -> {
+                    String.format("term: %s\tchest: %s", term, chestx);
+                });
+        GrafZahlenPlugin.GrafZahlenData.getChestAllowedPlayerMap()
+                .forEach((chestx, playerset) -> {
+                    String containString = "{";
+                    for (Player player :
+                            playerset) {
+                        containString = containString.concat("\n\t" + player.getName());
+                    }
+                    containString = containString.concat("\n}");
+                    System.out.println(String.format("chest: %s\tplayers: %s", chestx, containString));
+                });
 
     }
 
